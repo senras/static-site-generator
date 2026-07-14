@@ -10,6 +10,8 @@ class TextType(Enum):
 
 class TextNode:
     def __init__(self, text: str, text_type: TextType, url: str = None):
+        if not isinstance(text_type, TextType):
+            raise ValueError(f"Invalid text type: {text_type}. Must be an instance of TextType Enum.")
         self.text = text
         self.text_type = text_type
         self.url = url
