@@ -1,9 +1,9 @@
 import unittest
-from raw_text_splitter import split_nodes_delimiter
+from splitters import *
 from textnode import TextNode, TextType
 
 
-class TestRawTextSplitter(unittest.TestCase):
+class TestSplitters(unittest.TestCase):
     def test_split_bold_delimiter(self):
         old_nodes = [TextNode("This is text with a **bolded phrase** in the middle", TextType.PLAIN)]
         new_nodes = split_nodes_delimiter(old_nodes, "**", TextType.BOLD)
@@ -54,3 +54,21 @@ class TestRawTextSplitter(unittest.TestCase):
         old_nodes = [TextNode("This has an opening **delimiter", TextType.PLAIN)]
         with self.assertRaises(ValueError):
             split_nodes_delimiter(old_nodes, "**", TextType.BOLD)
+
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.PLAIN,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.PLAIN),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.PLAIN),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
