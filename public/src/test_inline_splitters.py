@@ -1,5 +1,5 @@
 import unittest
-from splitters import *
+from inline_splitters import *
 from textnode import TextNode, TextType
 
 

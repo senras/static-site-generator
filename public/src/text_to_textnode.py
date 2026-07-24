@@ -1,4 +1,4 @@
-from splitters import *
+from inline_splitters import *
 
 def text_to_textnodes(text) -> list[TextNode]:
 
