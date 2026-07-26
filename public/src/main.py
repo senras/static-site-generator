@@ -5,6 +5,21 @@ from block_splitters import markdown_to_html_node
 from textnode import TextNode, TextType
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+PUBLIC_DIR = REPO_ROOT / "public"
+OUTPUT_DIR = REPO_ROOT / "docs"
+
+
+def normalize_basepath(basepath):
+    if not basepath or basepath == "/":
+        return "/"
+    if not basepath.startswith("/"):
+        basepath = f"/{basepath}"
+    if not basepath.endswith("/"):
+        basepath = f"{basepath}/"
+    return basepath
+
+
 def extract_title(markdown):
     lines = markdown.splitlines()
     for line in lines:
@@ -29,9 +44,11 @@ def generate_page(from_path, template_path, dest_path, basepath="/"):
     html_content = markdown_to_html_node(markdown).to_html()
     title = extract_title(markdown)
 
+    basepath = normalize_basepath(basepath)
     full_html = template.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
-    full_html = full_html.replace('href="/', f'href="{basepath}')
-    full_html = full_html.replace('src="/', f'src="{basepath}')
+    if basepath != "/":
+        full_html = full_html.replace('href="/', f'href="{basepath}')
+        full_html = full_html.replace('src="/', f'src="{basepath}')
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     dest_path.write_text(full_html, encoding="utf-8")
@@ -73,23 +90,23 @@ def copy_directory_contents(source_dir, destination_dir):
 
 
 def main():
-    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
-    output_dir = "docs"
+    basepath = normalize_basepath(sys.argv[1] if len(sys.argv) > 1 else "/")
+    output_dir = OUTPUT_DIR
 
     text_node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(text_node)
-    copy_directory_contents("static", output_dir)
+    copy_directory_contents(PUBLIC_DIR / "static", output_dir)
 
     pages = [
-        ("content/index.md", f"{output_dir}/index.html"),
-        ("content/blog/glorfindel/index.md", f"{output_dir}/blog/glorfindel/index.html"),
-        ("content/blog/tom/index.md", f"{output_dir}/blog/tom/index.html"),
-        ("content/blog/majesty/index.md", f"{output_dir}/blog/majesty/index.html"),
-        ("content/contact/index.md", f"{output_dir}/contact/index.html"),
+        (PUBLIC_DIR / "content" / "index.md", output_dir / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "glorfindel" / "index.md", output_dir / "blog" / "glorfindel" / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "tom" / "index.md", output_dir / "blog" / "tom" / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "majesty" / "index.md", output_dir / "blog" / "majesty" / "index.html"),
+        (PUBLIC_DIR / "content" / "contact" / "index.md", output_dir / "contact" / "index.html"),
     ]
 
     for from_path, dest_path in pages:
-        generate_page(from_path, "template.html", dest_path, basepath)
+        generate_page(from_path, PUBLIC_DIR / "template.html", dest_path, basepath)
 
 
 if __name__ == "__main__":
