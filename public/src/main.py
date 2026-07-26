@@ -55,7 +55,7 @@ def generate_page(from_path, template_path, dest_path, basepath="/"):
     return full_html
 
 
-def copy_directory_contents(source_dir, destination_dir):
+def copy_directory_contents(source_dir, destination_dir, clear_destination=True):
     source_path = Path(source_dir)
     destination_path = Path(destination_dir)
 
@@ -64,15 +64,16 @@ def copy_directory_contents(source_dir, destination_dir):
 
     destination_path.mkdir(parents=True, exist_ok=True)
 
-    def clear_directory(path):
-        for child in path.iterdir():
-            if child.is_dir():
-                clear_directory(child)
-                child.rmdir()
-            else:
-                child.unlink()
+    if clear_destination:
+        def clear_directory(path):
+            for child in path.iterdir():
+                if child.is_dir():
+                    clear_directory(child)
+                    child.rmdir()
+                else:
+                    child.unlink()
 
-    clear_directory(destination_path)
+        clear_directory(destination_path)
 
     def copy_contents(source_path, destination_path):
         for child in source_path.iterdir():
@@ -92,17 +93,27 @@ def copy_directory_contents(source_dir, destination_dir):
 def main():
     basepath = normalize_basepath(sys.argv[1] if len(sys.argv) > 1 else "/")
     output_dir = OUTPUT_DIR
+    root_output_dir = REPO_ROOT
 
     text_node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(text_node)
     copy_directory_contents(PUBLIC_DIR / "static", output_dir)
+    copy_directory_contents(PUBLIC_DIR / "static", root_output_dir, clear_destination=False)
+
+    (output_dir / ".nojekyll").write_text("", encoding="utf-8")
+    (root_output_dir / ".nojekyll").write_text("", encoding="utf-8")
 
     pages = [
         (PUBLIC_DIR / "content" / "index.md", output_dir / "index.html"),
+        (PUBLIC_DIR / "content" / "index.md", root_output_dir / "index.html"),
         (PUBLIC_DIR / "content" / "blog" / "glorfindel" / "index.md", output_dir / "blog" / "glorfindel" / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "glorfindel" / "index.md", root_output_dir / "blog" / "glorfindel" / "index.html"),
         (PUBLIC_DIR / "content" / "blog" / "tom" / "index.md", output_dir / "blog" / "tom" / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "tom" / "index.md", root_output_dir / "blog" / "tom" / "index.html"),
         (PUBLIC_DIR / "content" / "blog" / "majesty" / "index.md", output_dir / "blog" / "majesty" / "index.html"),
+        (PUBLIC_DIR / "content" / "blog" / "majesty" / "index.md", root_output_dir / "blog" / "majesty" / "index.html"),
         (PUBLIC_DIR / "content" / "contact" / "index.md", output_dir / "contact" / "index.html"),
+        (PUBLIC_DIR / "content" / "contact" / "index.md", root_output_dir / "contact" / "index.html"),
     ]
 
     for from_path, dest_path in pages:

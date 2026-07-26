@@ -30,6 +30,22 @@ class CopyDirectoryContentsTests(unittest.TestCase):
             self.assertFalse((destination_dir / "old.txt").exists())
             self.assertFalse((destination_dir / "old-folder").exists())
 
+    def test_copy_directory_contents_can_merge_into_existing_directory(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_dir = root / "build"
+            destination_dir = root / "site"
+
+            source_dir.mkdir(parents=True)
+            destination_dir.mkdir(parents=True)
+            (source_dir / "index.css").write_text("body {}", encoding="utf-8")
+            (destination_dir / "keep.txt").write_text("keep", encoding="utf-8")
+
+            copy_directory_contents(source_dir, destination_dir, clear_destination=False)
+
+            self.assertTrue((destination_dir / "index.css").exists())
+            self.assertTrue((destination_dir / "keep.txt").exists())
+
 
 class ExtractTitleTests(unittest.TestCase):
     def test_extract_title_returns_stripped_h1(self):
