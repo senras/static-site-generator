@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from block_splitters import markdown_to_html_node
@@ -15,7 +16,7 @@ def extract_title(markdown):
     raise ValueError("No h1 header found in markdown")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath="/"):
     from_path = Path(from_path)
     template_path = Path(template_path)
     dest_path = Path(dest_path)
@@ -29,6 +30,8 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown)
 
     full_html = template.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
+    full_html = full_html.replace('href="/', f'href="{basepath}')
+    full_html = full_html.replace('src="/', f'src="{basepath}')
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     dest_path.write_text(full_html, encoding="utf-8")
@@ -70,20 +73,23 @@ def copy_directory_contents(source_dir, destination_dir):
 
 
 def main():
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    output_dir = "docs"
+
     text_node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(text_node)
-    copy_directory_contents("static", "public")
+    copy_directory_contents("static", output_dir)
 
     pages = [
-        ("content/index.md", "public/index.html"),
-        ("content/blog/glorfindel/index.md", "public/blog/glorfindel/index.html"),
-        ("content/blog/tom/index.md", "public/blog/tom/index.html"),
-        ("content/blog/majesty/index.md", "public/blog/majesty/index.html"),
-        ("content/contact/index.md", "public/contact/index.html"),
+        ("content/index.md", f"{output_dir}/index.html"),
+        ("content/blog/glorfindel/index.md", f"{output_dir}/blog/glorfindel/index.html"),
+        ("content/blog/tom/index.md", f"{output_dir}/blog/tom/index.html"),
+        ("content/blog/majesty/index.md", f"{output_dir}/blog/majesty/index.html"),
+        ("content/contact/index.md", f"{output_dir}/contact/index.html"),
     ]
 
     for from_path, dest_path in pages:
-        generate_page(from_path, "template.html", dest_path)
+        generate_page(from_path, "template.html", dest_path, basepath)
 
 
 if __name__ == "__main__":

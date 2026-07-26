@@ -64,6 +64,26 @@ class GeneratePageTests(unittest.TestCase):
             self.assertIn("<h1>Hello</h1>", html)
             self.assertIn("This is text", html)
 
+    def test_generate_page_rewrites_root_relative_urls_with_basepath(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            markdown_path = root / "content" / "index.md"
+            template_path = root / "template.html"
+            destination_path = root / "public" / "index.html"
+
+            markdown_path.parent.mkdir(parents=True)
+            markdown_path.write_text("# Hello", encoding="utf-8")
+            template_path.write_text(
+                "<a href=\"/about\">About</a><img src=\"/images/pic.png\" />{{ Content }}",
+                encoding="utf-8",
+            )
+
+            generate_page(markdown_path, template_path, destination_path, basepath="/site/")
+
+            html = destination_path.read_text(encoding="utf-8")
+            self.assertIn('href="/site/about"', html)
+            self.assertIn('src="/site/images/pic.png"', html)
+
 
 if __name__ == "__main__":
     unittest.main()
